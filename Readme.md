@@ -6,7 +6,7 @@ See <https://godoc.org/github.com/kr/githubauth> for documentation.
 
 ```go
 h := &githubauth.Handler{
-	RequireOrg:   "mycorp",
+	PermittedEmails: map[string]bool{"tommy@interstellar.com":true},
 	Keys:         keys(),
 	ClientID:     os.Getenv("OAUTH_CLIENT_ID"),
 	ClientSecret: os.Getenv("OAUTH_CLIENT_SECRET"),

@@ -19,7 +19,7 @@ const callbackPath = "/_googleauth"
 type Session struct {
 	// Client is an HTTP client obtained from oauth2.Config.Client.
 	// It adds necessary OAuth2 credentials to outgoing requests to
-	// perform GitHub API calls.
+	// perform Google API calls.
 	*http.Client
 }
 
@@ -31,7 +31,7 @@ type GoogleUser struct {
 	Profile string `json:"profile"`
 	Picture string `json:"picture"`
 	Email string `json:"email"`
-	EmailVerified string `json:"email_verified"`
+	EmailVerified bool `json:"email_verified"`
 	Gender string `json:"gender"`
 }
 
@@ -48,7 +48,7 @@ func GetSession(ctx context.Context) (*Session, bool) {
 
 // A ContextHandler can be used as the HTTP handler
 // in a Handler value in order to obtain information
-// about the logged-in GitHub user through the provided
+// about the logged-in Google user through the provided
 // Context. See GetSession.
 type ContextHandler interface {
 	ServeHTTPContext(context.Context, http.ResponseWriter, *http.Request)
@@ -58,14 +58,14 @@ type ContextHandler interface {
 // users to log in with Google OAuth and requires
 // their emails to be in the list of permitted emails.
 type Handler struct {
-	// PermittedEmails is a map of all emails that
-	// are allowed access.
+	// PermittedEmails is a map of all Google Account
+	// emails that are allowed access.
 	// If unset, any user will be permitted.
 	PermittedEmails map[string]bool
 
 	// Used to initialize corresponding fields of a session Config.
 	// See github.com/kr/session.
-	// If Name is empty, "githubauth" is used.
+	// If Name is empty, "googleauth" is used.
 	Name   string
 	Path   string
 	Domain string
@@ -73,7 +73,7 @@ type Handler struct {
 	Keys   []*[32]byte
 
 	// Used to initialize corresponding fields of oauth2.Config.
-	// Scopes can be nil, in which case user:email and read:org
+	// Scopes can be nil, in which case "https://www.googleapis.com/auth/userinfo.email"
 	// will be requested.
 	ClientID     string
 	ClientSecret string
@@ -139,13 +139,13 @@ func (h *Handler) loginOk(ctx context.Context, w http.ResponseWriter, r *http.Re
 	if r.URL.Path == callbackPath {
 		if r.FormValue("state") != user.State {
 			h.deleteCookie(w)
-			http.Error(w, "access forbidden line 130", 401)
+			http.Error(w, "access forbidden", 401)
 			return ctx, false
 		}
 		tok, err := conf.Exchange(ctx, r.FormValue("code"))
 		if err != nil {
 			h.deleteCookie(w)
-			http.Error(w, "access forbidden line 136", 401)
+			http.Error(w, "access forbidden", 401)
 			return ctx, false
 		}
 		client := conf.Client(ctx, tok)
@@ -160,12 +160,12 @@ func (h *Handler) loginOk(ctx context.Context, w http.ResponseWriter, r *http.Re
 			if err := json.NewDecoder(resp.Body).Decode(&v); err != nil {
 				log.Println("Decode:", err)
 				h.deleteCookie(w)
-				http.Error(w, "Internal Server Error - Invalid JSON from Github", 500)
+				http.Error(w, "Internal Server Error - Invalid JSON from Google", 500)
 				return ctx, false
 			}
 			log.Println("Email:", v.Email)
-			if h.PermittedEmails[v.Email] {
-				log.Println("User is not allowed access: ", v.Email)
+			if !h.PermittedEmails[v.Email] {
+				log.Println("User is not allowed access:", v.Email)
 				h.deleteCookie(w)
 				http.Error(w, "Access Forbidden - Your account is not allowed access.", 401)
 				return ctx, false

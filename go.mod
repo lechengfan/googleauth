@@ -1,4 +1,4 @@
-module "github.com/kr/githubauth"
+module "github.com/lechengfan/googleauth"
 
 require (
 	"github.com/kr/session" v0.1.0
