@@ -1,6 +1,6 @@
-##### GitHub OAuth HTTP handler
+##### Google OAuth HTTP handler
 
-See <https://godoc.org/github.com/kr/githubauth> for documentation.
+Inspired by <https://github.com/kr/githubauth>. This package provides a Handler to authenticate through Google OAuth.
 
 ###### Example
 
