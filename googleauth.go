@@ -164,7 +164,7 @@ func (h *Handler) loginOk(ctx context.Context, w http.ResponseWriter, r *http.Re
 				return ctx, false
 			}
 			log.Println("Email:", v.Email)
-			if !h.PermittedEmails[v.Email] {
+			if !v.EmailVerified || !h.PermittedEmails[v.Email] {
 				log.Println("User is not allowed access:", v.Email)
 				h.deleteCookie(w)
 				http.Error(w, "Access Forbidden - Your account is not allowed access.", 401)
