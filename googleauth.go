@@ -163,7 +163,6 @@ func (h *Handler) loginOk(ctx context.Context, w http.ResponseWriter, r *http.Re
 				http.Error(w, "Internal Server Error - Invalid JSON from Google", 500)
 				return ctx, false
 			}
-			log.Println("Email:", v.Email)
 			if !v.EmailVerified || !h.PermittedEmails[v.Email] {
 				log.Println("User is not allowed access:", v.Email)
 				h.deleteCookie(w)
